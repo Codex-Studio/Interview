@@ -38,7 +38,7 @@ class TelegramUser(models.Model):
     )
 
     def __str__(self):
-        return f"{self.id} {self.username}"
+        return f"{self.code}"
     
     def save(self, *args, **kwargs):
         if not self.code:

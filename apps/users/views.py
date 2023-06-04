@@ -31,5 +31,14 @@ async def identification_user(message:types.Message):
     await IdentificationState.code.set()
 
 @dp.message_handler(state=IdentificationState.code)
-async def get_identification_code(message:types.Message, state:FSMContext):
-    await message.answer("PON")
+async def get_identification_code(message: types.Message, state: FSMContext):
+    await message.answer("Проверяем данные...")
+    all_codes = await sync_to_async(list)(TelegramUser.objects.all())
+    codes = [user.code for user in all_codes]
+    for code in codes:
+        if code == message.text:
+            await message.answer("Данные верны")
+            await state.finish()
+            break
+    else:
+        await message.answer("К сожелению данные не верные, введите еще раз")
