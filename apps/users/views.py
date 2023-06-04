@@ -6,8 +6,9 @@ from aiogram.dispatcher import FSMContext
 from logging import basicConfig, INFO
 
 from apps.users.models import TelegramUser
-from apps.users.keyboard import identification_buttons, question_buttons
+from apps.users.keyboard import identification_buttons, question_buttons, end_buttons
 from apps.users.state import IdentificationState
+from apps.questions.models import Question, Mailing
 
 # Create your views here.
 bot = Bot(settings.TELEGRAM_BOT_TOKEN)
@@ -44,8 +45,22 @@ async def get_identification_code(message: types.Message, state: FSMContext):
             user.first_name = message.from_user.first_name
             user.last_name = message.from_user.last_name
             await sync_to_async(user.save)()
-            await message.answer("Данные успешно записаны", reply_markup=question_buttons)
+            await message.answer("Данные успешно записаны ожидайте начало собесодевания")
             await state.finish()
             break
     else:
         await message.answer("К сожелению данные не верные, введите еще раз")
+
+async def send_mailing(user, title, mailing_type):
+    all_users = await sync_to_async(list)(TelegramUser.objects.all())
+    chats_id = [user.chat_id for user in all_users]
+    if mailing_type == "Simple" and user == None:
+        for chat in chats_id:
+            await bot.send_message(chat, title)
+    elif mailing_type == "Personal" and user != None:
+        personal_user = await sync_to_async(TelegramUser.objects.get)(code=user)
+        print(personal_user.chat_id)
+        await bot.send_message(personal_user.chat_id, title)
+    elif mailing_type == "End":
+        for chat in chats_id:
+            await bot.send_message(chat, title, reply_markup=end_buttons)

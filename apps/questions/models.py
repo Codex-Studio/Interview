@@ -15,7 +15,7 @@ class Question(models.Model):
     )
     point = models.DecimalField(
         verbose_name="Оценка",
-        max_digits=1,
+        max_digits=2,
         decimal_places=1
     )
 

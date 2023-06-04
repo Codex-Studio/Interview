@@ -10,3 +10,8 @@ question_keyboards = [
     InlineKeyboardButton('Получить вопросы', callback_data='get_questions')
 ]
 question_buttons = InlineKeyboardMarkup().add(*question_keyboards)
+
+end_keyboards = [
+    InlineKeyboardButton('Узнать ответы', callback_data='end_questions')
+]
+end_buttons = InlineKeyboardMarkup().add(*end_keyboards)
