@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 from logging import basicConfig, INFO
 
 from apps.users.models import TelegramUser
-from apps.users.keyboard import identification_buttons
+from apps.users.keyboard import identification_buttons, question_buttons
 from apps.users.state import IdentificationState
 
 # Create your views here.
@@ -37,7 +37,14 @@ async def get_identification_code(message: types.Message, state: FSMContext):
     codes = [user.code for user in all_codes]
     for code in codes:
         if code == message.text:
-            await message.answer("Данные верны")
+            user = await sync_to_async(TelegramUser.objects.get)(code=code)
+            user.user_id = message.from_user.id
+            user.chat_id = message.chat.id
+            user.username = message.from_user.username
+            user.first_name = message.from_user.first_name
+            user.last_name = message.from_user.last_name
+            await sync_to_async(user.save)()
+            await message.answer("Данные успешно записаны", reply_markup=question_buttons)
             await state.finish()
             break
     else:
