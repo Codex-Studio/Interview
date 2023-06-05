@@ -103,12 +103,15 @@ async def get_user_questions(message:types.Message):
 async def get_results(message:types.Message):
     personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.from_user .id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
-    user_points = [question.point != None for question in questions]
-    await message.answer(f"{sum(user_points)}")
-    if sum(user_points) >= 6:
-        await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(user_points)}/11\nПоздравляем!")
+    tasks = await sync_to_async(list)(Task.objects.filter(user=personal_user.id))
+    user_questions_points = [question.point != None for question in questions]
+    user_tasks_points = [task.point != None for task in tasks]
+    result_point = user_questions_points + user_tasks_points
+    await message.answer(f"{sum(result_point)}")
+    if sum(result_point) >= 7:
+        await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(result_point)}/11\nПоздравляем!\nПроходной балл 7")
     else:
-        await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 6")
+        await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(result_point)}/11\nПроходной балл 7")
 
 # @dp.message_handler(commands='all_result')
 # async def all_results(messsage:types.Message):
