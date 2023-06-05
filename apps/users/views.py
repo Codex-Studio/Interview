@@ -105,10 +105,10 @@ async def get_results(message:types.Message):
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
     user_points = [question.point != None for question in questions]
     await message.answer(f"{sum(user_points)}")
-    if sum(user_points) >= 5:
+    if sum(user_points) >= 6:
         await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(user_points)}/11\nПоздравляем!")
     else:
-        await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 5")
+        await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 6")
 
 @dp.message_handler()
 async def not_found(message:types.Message):
