@@ -66,10 +66,11 @@ async def get_identification_code(message: types.Message, state: FSMContext):
 async def send_mailing(user, title, mailing_type):
     all_users = await sync_to_async(list)(TelegramUser.objects.all())
     chats_id = [user.chat_id for user in all_users]
+    print(chats_id)
     if mailing_type == "Simple" and user == None:
         for chat in chats_id:
             await bot.send_message(chat, title)
-    elif mailing_type == "Start" and  user != None:
+    elif mailing_type == "Start" and user != None:
         personal_user = await sync_to_async(TelegramUser.objects.get)(code=user)
         print(personal_user.chat_id)
         await bot.send_message(personal_user.chat_id, title, reply_markup=question_buttons)
