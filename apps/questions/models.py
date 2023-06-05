@@ -16,7 +16,8 @@ class Question(models.Model):
     point = models.DecimalField(
         verbose_name="Оценка",
         max_digits=2,
-        decimal_places=1
+        decimal_places=1,
+        blank=True, null=True
     )
 
     def __str__(self):
@@ -38,6 +39,7 @@ class Mailing(models.Model):
         verbose_name="Сообщение",
     )
     CHOICE_TYPE = (
+        ('Start', 'Start'),
         ('Simple', 'Simple'),
         ('End', 'End'),
         ('Personal', 'Personal')
