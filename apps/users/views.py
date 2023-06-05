@@ -98,7 +98,8 @@ async def get_user_questions(message:types.Message):
         for task in user_tasks:
             t += 1
             await bot.send_message(personal_user.chat_id, f"{t}) {task}")
-    
+
+@dp.message_handler(commands='result')
 async def get_results(message:types.Message):
     personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.chat.id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
