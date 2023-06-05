@@ -104,8 +104,10 @@ async def get_results(message:types.Message):
     personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.from_user .id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
     tasks = await sync_to_async(list)(Task.objects.filter(user=personal_user.id))
-    user_questions_points = [question.point != None for question in questions]
-    user_tasks_points = [task.point != None for task in tasks]
+    user_questions_points = [question.point for question in questions]
+    user_tasks_points = [task.point for task in tasks]
+    print(user_questions_points)
+    print(user_tasks_points)
     result_point = user_questions_points + user_tasks_points
     await message.answer(f"{sum(result_point)}")
     if sum(result_point) >= 7:
