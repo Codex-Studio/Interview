@@ -8,7 +8,7 @@ from logging import basicConfig, INFO
 from apps.users.models import TelegramUser
 from apps.users.keyboard import identification_buttons, question_buttons, end_buttons
 from apps.users.state import IdentificationState
-from apps.questions.models import Question, Mailing
+from apps.questions.models import Question, Task
 
 # Create your views here.
 bot = Bot(settings.TELEGRAM_BOT_TOKEN)
@@ -76,15 +76,26 @@ async def send_mailing(user, title, mailing_type):
 async def get_user_questions(message:types.Message):
     personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.chat.id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
+    tasks = await sync_to_async(list)(Task.objects.filter(user=personal_user.id))
     user_questions = [question.title for question in questions]
-    if user_questions:
+    user_tasks = [task.title for task in tasks]
+    if user_questions and user_tasks:
         n = 0
         for question in user_questions:
             n += 1
             await bot.send_message(personal_user.chat_id, f"{n}) {question}")
+        t = 0
+        await bot.send_message(personal_user.chat_id, "А теперь задачи")
+        for task in user_tasks:
+            t += 1
+            await bot.send_message(personal_user.chat_id, f"{t}) {task}")
     
 async def get_results(message:types.Message):
     personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.chat.id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
-    user_points = [question.point for question in questions]
+    user_points = [question.point != None for question in questions]
     await message.answer(f"{sum(user_points)}")
+    if sum(user_points) >= 5:
+        await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(user_points)}/11\nПоздравляем!")
+    else:
+        await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 5")

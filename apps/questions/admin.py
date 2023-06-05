@@ -2,13 +2,21 @@ from typing import Any
 from django.contrib import admin
 import asyncio
 
-from apps.questions.models import Question, Mailing
+from apps.questions.models import Question, Task, Mailing 
 from apps.users.views import send_mailing
 
 # Register your models here.
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('user', 'title', 'point')
+    list_filter = ('user', )
+    search_fields = ('user__username', 'title', 'point')
+    list_per_page = 20
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('user', 'title', 'point')
+    list_filter = ('user', )
     search_fields = ('user__username', 'title', 'point')
     list_per_page = 20
 
