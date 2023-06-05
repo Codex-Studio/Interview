@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 from logging import basicConfig, INFO
 
 from apps.users.models import TelegramUser
-from apps.users.keyboard import identification_buttons, question_buttons, end_buttons
+from apps.users.keyboard import identification_buttons, question_buttons, end_buttons, cancel_buttons
 from apps.users.state import IdentificationState
 from apps.questions.models import Question, Task
 
@@ -17,10 +17,6 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 basicConfig(level=INFO)
 
-@dp.message_handler(commands='start')
-async def start(message:types.Message):
-    await message.answer(f"Привет {message.from_user.full_name}", reply_markup=identification_buttons)
-
 @dp.callback_query_handler(lambda call: call)
 async def identification_callback(call):
     if call.data == 'identification':
@@ -30,6 +26,14 @@ async def identification_callback(call):
     elif call.data == 'end_questions':
         await get_results(call.message)
 
+@dp.message_handler(commands='start')
+async def start(message:types.Message):
+    try:
+        user = await sync_to_async(TelegramUser.objects.get)(user_id=message.from_user.id)
+        await message.answer(f"Привет {message.from_user.full_name}. Твой код идентификации {user.code}")
+    except:
+        await message.answer(f"Привет {message.from_user.full_name}", reply_markup=identification_buttons)
+
 @dp.message_handler(commands='identification')
 async def identification_user(message:types.Message):
     await message.answer("Введите код идентификации")
@@ -37,23 +41,27 @@ async def identification_user(message:types.Message):
 
 @dp.message_handler(state=IdentificationState.code)
 async def get_identification_code(message: types.Message, state: FSMContext):
-    await message.answer("Проверяем данные...")
-    all_codes = await sync_to_async(list)(TelegramUser.objects.all())
-    codes = [user.code for user in all_codes]
-    for code in codes:
-        if code == message.text:
-            user = await sync_to_async(TelegramUser.objects.get)(code=code)
-            user.user_id = message.from_user.id
-            user.chat_id = message.chat.id
-            user.username = message.from_user.username
-            user.first_name = message.from_user.first_name
-            user.last_name = message.from_user.last_name
-            await sync_to_async(user.save)()
-            await message.answer("Данные успешно записаны ожидайте начало собесодевания")
-            await state.finish()
-            break
+    if message.text == 'Отменить':
+        await start(message)
+        await state.finish()
     else:
-        await message.answer("К сожелению данные не верные, введите еще раз")
+        await message.answer("Проверяем данные...")
+        all_codes = await sync_to_async(list)(TelegramUser.objects.all())
+        codes = [user.code for user in all_codes]
+        for code in codes:
+            if code == message.text:
+                user = await sync_to_async(TelegramUser.objects.get)(code=code)
+                user.user_id = message.from_user.id
+                user.chat_id = message.chat.id
+                user.username = message.from_user.username
+                user.first_name = message.from_user.first_name
+                user.last_name = message.from_user.last_name
+                await sync_to_async(user.save)()
+                await message.answer("Данные успешно записаны ожидайте начало собесодевания")
+                await state.finish()
+                break
+        else:
+            await message.answer("К сожалению данные не верные, введите еще раз", reply_markup=cancel_buttons)
 
 async def send_mailing(user, title, mailing_type):
     all_users = await sync_to_async(list)(TelegramUser.objects.all())
@@ -99,3 +107,7 @@ async def get_results(message:types.Message):
         await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(user_points)}/11\nПоздравляем!")
     else:
         await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 5")
+
+@dp.message_handler()
+async def not_found(message:types.Message):
+    await message.answer("Я вас не понял введите help")
