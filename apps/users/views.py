@@ -101,7 +101,7 @@ async def get_user_questions(message:types.Message):
 
 @dp.message_handler(commands='result')
 async def get_results(message:types.Message):
-    personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.chat.id)
+    personal_user = await sync_to_async(TelegramUser.objects.get)(user_id=message.from_user .id)
     questions = await sync_to_async(list)(Question.objects.filter(user=personal_user.id))
     user_points = [question.point != None for question in questions]
     await message.answer(f"{sum(user_points)}")
@@ -109,6 +109,11 @@ async def get_results(message:types.Message):
         await message.answer(f"Уважаемый {personal_user.code}, вы прошли тест!\nВаш итоговый балл {sum(user_points)}/11\nПоздравляем!")
     else:
         await message.answer(f"{personal_user.code} вы не прошли тест\nВаш итоговый балл {sum(user_points)}/11\nПроходной балл 6")
+
+# @dp.message_handler(commands='all_result')
+# async def all_results(messsage:types.Message):
+#     all_users = await sync_to_async(list)(TelegramUser.objects.all)
+#     points = await sync_to_async(Question.objects.filter())
 
 @dp.message_handler()
 async def not_found(message:types.Message):
